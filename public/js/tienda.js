@@ -112,16 +112,16 @@ function pintarContador() {
 }
 
 // Agrega un producto (si ya está con la misma talla y color, suma la cantidad).
-function agregarAlCarrito(p, talla, color, cantidad) {
+function agregarAlCarrito(p, talla, color, cantidad, silencioso = false) {
   const existente = estado.carrito.find((i) => i.id === p.id && i.talla === talla && i.color === color);
   const stock = p.tallas[talla] ?? 0;
   const actual = existente ? existente.cantidad : 0;
   const nueva = Math.min(actual + cantidad, stock); // No permite pasar del stock
-  if (nueva === actual) return aviso(`Solo hay ${stock} unidades en talla ${talla}`, true);
+  if (nueva === actual) return silencioso || aviso(`Solo hay ${stock} unidades en talla ${talla}`, true);
   if (existente) existente.cantidad = nueva;
   else estado.carrito.push({ id: p.id, talla, color, cantidad: nueva });
   guardarCarrito();
-  aviso('Agregado al carrito ✓');
+  if (!silencioso) aviso('Agregado al carrito ✓');
 }
 
 // Une cada línea del carrito con los datos actuales del producto.
@@ -170,21 +170,185 @@ function filtrar(lista, f) {
 // Piezas reutilizables de HTML
 // ---------------------------------------------------------------------
 
+// Íconos pequeños de las tarjetas.
+const IC_FAV = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-9.2-8.6A5 5 0 0 1 12 6a5 5 0 0 1 9.2 5.4C19 15.6 12 20 12 20Z"/></svg>';
+const IC_PERCHA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 7a2 2 0 1 1 2-2c0 1.2-2 1.6-2 3v1l9 6.5a1 1 0 0 1-.6 1.8H3.6a1 1 0 0 1-.6-1.8L12 9"/></svg>';
+const IC_BOLSA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>';
+
 // Tarjeta de producto para las grillas.
 function tarjeta(p) {
   const d = descuento(p);
   // Etiqueta: "Agotado" tiene prioridad sobre el descuento.
   const etq = p.agotado ? '<span class="etq etq-agot">Agotado</span>' : d ? `<span class="etq etq-desc">-${d}%</span>` : '';
   return `
-    <a class="tarjeta ${p.agotado ? 'agotada' : ''}" href="#/producto/${p.id}">
-      <div class="tarjeta-foto">
+    <article class="tarjeta ${p.agotado ? 'agotada' : ''}">
+      <div class="tar-acc">
+        <button class="redondo" data-fav="${p.id}" aria-pressed="${esFavorito(p.id)}" aria-label="Favorito" title="Favorito">${IC_FAV}</button>
+        <button class="redondo" data-prob="${p.id}" aria-pressed="${enProbador(p.id)}" aria-label="Llevar al probador" title="Llevar al probador" ${p.agotado ? 'disabled' : ''}>${IC_PERCHA}</button>
+      </div>
+      <a class="tarjeta-foto" href="#/producto/${p.id}">
         <img src="${esc(p.fotos[0] || '/img/sin-foto.svg')}" alt="${esc(p.nombre)}" loading="lazy">
         ${etq}
+      </a>
+      <div class="tar-info">
+        <a href="#/producto/${p.id}">
+          <h3>${esc(p.nombre)}</h3>
+          <div><span class="precio">${pesos(p.precio)}</span>${d ? `<span class="precio-ant">${pesos(p.precio_anterior)}</span>` : ''}</div>
+          <div class="puntos">${p.colores.map((c) => `<span class="punto" style="background:${esc(c.hex)}" title="${esc(c.nombre)}"></span>`).join('')}</div>
+        </a>
+        <button class="tar-carrito" data-add="${p.id}" aria-label="Agregar ${esc(p.nombre)} al carrito" ${p.agotado ? 'disabled' : ''}>${IC_BOLSA}</button>
       </div>
-      <h3>${esc(p.nombre)}</h3>
-      <div><span class="precio">${pesos(p.precio)}</span>${d ? `<span class="precio-ant">${pesos(p.precio_anterior)}</span>` : ''}</div>
-      <div class="puntos">${p.colores.map((c) => `<span class="punto" style="background:${esc(c.hex)}" title="${esc(c.nombre)}"></span>`).join('')}</div>
-    </a>`;
+    </article>`;
+}
+
+// ---------------------------------------------------------------------
+// Favoritos (corazón) guardados en el navegador
+// ---------------------------------------------------------------------
+let favoritos = new Set(leerLista('ds_favoritos'));
+
+// Lee una lista guardada en el navegador (vacía si no se puede).
+function leerLista(clave) {
+  try { return JSON.parse(localStorage.getItem(clave) || '[]'); } catch { return []; }
+}
+// Guarda una lista en el navegador (si el navegador lo permite).
+function guardarLista(clave, valor) {
+  try { localStorage.setItem(clave, JSON.stringify(valor)); } catch { /* modo privado */ }
+}
+// ¿El producto está en favoritos?
+function esFavorito(id) { return favoritos.has(id); }
+// Agrega o quita de favoritos.
+function alternarFavorito(id) {
+  favoritos.has(id) ? favoritos.delete(id) : favoritos.add(id);
+  guardarLista('ds_favoritos', [...favoritos]);
+  $$(`[data-fav="${id}"]`).forEach((b) => b.setAttribute('aria-pressed', favoritos.has(id)));
+  aviso(favoritos.has(id) ? 'Guardado en favoritos ♥' : 'Quitado de favoritos');
+}
+
+// ---------------------------------------------------------------------
+// Probador: el cliente arma un outfit con una prenda por zona del cuerpo
+// ---------------------------------------------------------------------
+let probador = leerLista('ds_probador'); // [{ id, talla }]
+
+// Zona del cuerpo según la categoría (una prenda por zona).
+function zona(categoria) {
+  if (categoria === 'Pantalones') return 'abajo';
+  if (categoria === 'Zapatos') return 'pies';
+  if (categoria === 'Accesorios') return 'acc';
+  if (categoria === 'Vestidos') return 'vestido';
+  return 'arriba'; // Camisas, Chaquetas y otras prendas superiores
+}
+// ¿El producto está en el probador?
+function enProbador(id) { return probador.some((x) => x.id === id); }
+// Primera talla con unidades disponibles.
+function primeraTalla(p) { return ordenarTallas(Object.keys(p.tallas)).find((t) => p.tallas[t] > 0) || ''; }
+
+// Agrega una prenda al probador o la quita si ya estaba.
+function alternarProbador(id) {
+  const p = estado.productos.find((x) => x.id === id);
+  if (!p || p.agotado) return;
+  if (enProbador(id)) {
+    probador = probador.filter((x) => x.id !== id);
+  } else {
+    // Un vestido ocupa arriba y abajo; las demás prendas reemplazan la de su misma zona.
+    const z = zona(p.categoria);
+    const choca = (otra) => { const zo = zona(otra); return zo === z || (z === 'vestido' && (zo === 'arriba' || zo === 'abajo')) || (zo === 'vestido' && (z === 'arriba' || z === 'abajo')); };
+    probador = probador.filter((x) => { const o = estado.productos.find((q) => q.id === x.id); return o && !choca(o.categoria); });
+    probador.push({ id, talla: primeraTalla(p) });
+  }
+  guardarLista('ds_probador', probador);
+  $$('[data-prob]').forEach((b) => b.setAttribute('aria-pressed', enProbador(Number(b.dataset.prob))));
+  pintarProbador(true);
+}
+
+// Dibuja el botón flotante y, si está abierto, el panel del probador.
+function pintarProbador(abrir = false) {
+  const piezas = probador.map((x) => ({ ...x, p: estado.productos.find((q) => q.id === x.id) })).filter((x) => x.p);
+  const btn = $('#probador-btn');
+  btn.querySelector('b').textContent = piezas.length;
+  const panel = $('#probador');
+  if (abrir) panel.hidden = false;
+  if (panel.hidden) return;
+  const total = piezas.reduce((a, x) => a + x.p.precio, 0);
+  panel.innerHTML = `
+    <div class="probador-cab"><h3>Probador</h3><button class="icono-btn" data-cerrar-prob aria-label="Cerrar probador">✕</button></div>
+    <p>Toca la percha <span style="vertical-align:middle;color:var(--acento)">${IC_PERCHA}</span> de cualquier prenda para armar tu outfit. Una prenda por zona: arriba, abajo, zapatos y accesorio.</p>
+    <div class="outfit">
+      ${piezas.length ? piezas.map((x) => {
+        const z = zona(x.p.categoria);
+        const estilo = z === 'vestido' ? 'grid-area:1/1/3/2' : '';
+        return `<img class="z-${z}" style="${estilo}" src="${esc(x.p.fotos[0] || '/img/sin-foto.svg')}" alt="${esc(x.p.nombre)}">`;
+      }).join('') : '<div class="outfit-vacio">Tu outfit está vacío.<br>Agrega una camisa, un pantalón, zapatos y un accesorio.</div>'}
+    </div>
+    ${piezas.length ? `<div class="piezas">
+      ${piezas.map((x) => `<div class="pieza">
+        <img src="${esc(x.p.fotos[0] || '/img/sin-foto.svg')}" alt="">
+        <span>${esc(x.p.nombre)}<br><b>${pesos(x.p.precio)}</b></span>
+        <select data-talla-prob="${x.id}" aria-label="Talla de ${esc(x.p.nombre)}">
+          ${ordenarTallas(Object.keys(x.p.tallas)).map((t) => `<option ${t === x.talla ? 'selected' : ''} ${x.p.tallas[t] > 0 ? '' : 'disabled'}>${esc(t)}</option>`).join('')}
+        </select>
+        <button data-quitar-prob="${x.id}" aria-label="Quitar">✕</button>
+      </div>`).join('')}
+    </div>
+    <div class="probador-total"><span>Outfit completo</span><span>${pesos(total)}</span></div>
+    <div style="display:grid;gap:8px">
+      <button class="btn btn-bloque" data-outfit-carrito>Agregar outfit al carrito</button>
+      <button class="btn btn-sec btn-bloque btn-peq" data-vaciar-prob>Vaciar probador</button>
+    </div>` : ''}`;
+}
+
+// Eventos del probador.
+function eventosProbador() {
+  $('#probador-btn').addEventListener('click', () => {
+    const panel = $('#probador');
+    panel.hidden = !panel.hidden;
+    pintarProbador();
+  });
+  const panel = $('#probador');
+  panel.addEventListener('click', (e) => {
+    if (e.target.closest('[data-cerrar-prob]')) { panel.hidden = true; return; }
+    const q = e.target.closest('[data-quitar-prob]');
+    if (q) return alternarProbador(Number(q.dataset.quitarProb));
+    if (e.target.closest('[data-vaciar-prob]')) {
+      probador = []; guardarLista('ds_probador', probador);
+      $$('[data-prob]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+      return pintarProbador();
+    }
+    if (e.target.closest('[data-outfit-carrito]')) {
+      // Agrega cada prenda con la talla elegida y su primer color.
+      probador.forEach((x) => {
+        const p = estado.productos.find((q) => q.id === x.id);
+        if (p && x.talla) agregarAlCarrito(p, x.talla, p.colores[0]?.nombre || '', 1, true);
+      });
+      aviso('Outfit agregado al carrito ✓');
+    }
+  });
+  panel.addEventListener('change', (e) => {
+    const s = e.target.closest('[data-talla-prob]');
+    if (!s) return;
+    const x = probador.find((y) => y.id === Number(s.dataset.tallaProb));
+    if (x) { x.talla = s.value; guardarLista('ds_probador', probador); }
+  });
+}
+
+// Clics en los botones de las tarjetas (funciona en cualquier pantalla).
+function eventosTarjetas() {
+  document.addEventListener('click', (e) => {
+    const f = e.target.closest('[data-fav]');
+    if (f) { e.preventDefault(); return alternarFavorito(Number(f.dataset.fav)); }
+    const pr = e.target.closest('[data-prob]');
+    if (pr) { e.preventDefault(); return alternarProbador(Number(pr.dataset.prob)); }
+    const ad = e.target.closest('[data-add]');
+    if (ad) {
+      e.preventDefault();
+      const p = estado.productos.find((x) => x.id === Number(ad.dataset.add));
+      if (!p) return;
+      // Si solo hay una talla disponible se agrega directo; si hay varias, se abre el producto para elegir.
+      const disponibles = Object.keys(p.tallas).filter((t) => p.tallas[t] > 0);
+      if (disponibles.length === 1) return agregarAlCarrito(p, disponibles[0], p.colores[0]?.nombre || '', 1);
+      location.hash = `#/producto/${p.id}`;
+      setTimeout(() => aviso('Elige tu talla y agrégalo al carrito'), 50);
+    }
+  });
 }
 
 // Iconos de línea finos (SVG) para la franja de confianza e información.
@@ -236,7 +400,7 @@ function pantallaInicio() {
     </div></section>
 
     ${ofertas.length ? `<section class="seccion"><div class="contenedor">
-      <div class="seccion-cab"><h2>Ofertas</h2><a href="#/catalogo?ofertas=1">Ver todo</a></div>
+      <div class="seccion-cab"><h2>Ofertas <small>${ofertas.length} productos</small></h2><a href="#/catalogo?ofertas=1">Ver todo</a></div>
       <div class="grilla">${ofertas.map(tarjeta).join('')}</div>
     </div></section>` : ''}
 
@@ -285,7 +449,7 @@ function pantallaCatalogo(params) {
 
   app.innerHTML = `
     <div class="contenedor">
-      <div class="cat-cab"><h1>${titulo}</h1><p id="conteo"></p></div>
+      <div class="cat-cab"><h1>${titulo} <small id="conteo"></small></h1></div>
       <div class="barra-filtros">
         <button class="btn btn-sec btn-peq" id="btn-filtrar">Filtrar</button>
         <select id="orden" aria-label="Ordenar">
@@ -295,7 +459,7 @@ function pantallaCatalogo(params) {
         </select>
       </div>
       <div class="catalogo">
-        <aside class="filtros" id="filtros-lat">${htmlFiltros()}</aside>
+        <aside class="filtros" id="filtros-lat"><div class="filtros-caja"><div class="filtros-cab"><span>Filtros</span><button data-limpiar>Limpiar</button></div>${htmlFiltros()}</div></aside>
         <div><div class="grilla" id="grilla"></div></div>
       </div>
     </div>`;
@@ -420,6 +584,10 @@ function pantallaProducto(id) {
 
           <div class="acciones">
             <button class="btn btn-bloque" id="agregar" ${p.agotado ? 'disabled' : ''}>Agregar al carrito</button>
+            <div style="display:flex;gap:8px">
+              <button class="redondo" data-fav="${p.id}" aria-pressed="${esFavorito(p.id)}" aria-label="Favorito" title="Favorito">${IC_FAV}</button>
+              <button class="redondo" data-prob="${p.id}" aria-pressed="${enProbador(p.id)}" aria-label="Llevar al probador" title="Llevar al probador" ${p.agotado ? 'disabled' : ''}>${IC_PERCHA}</button>
+            </div>
             <a class="btn btn-sec btn-bloque" id="pedir-wa" target="_blank" rel="noopener">Pedir por WhatsApp</a>
           </div>
 
@@ -665,6 +833,16 @@ function pantallaInfo() {
     </div>`;
 }
 
+// 7. Favoritos
+function pantallaFavoritos() {
+  const lista = estado.productos.filter((p) => favoritos.has(p.id));
+  app.innerHTML = `<div class="contenedor">
+    <div class="cat-cab"><h1>Favoritos <small>${lista.length} producto${lista.length === 1 ? '' : 's'}</small></h1></div>
+    ${lista.length ? `<div class="grilla" style="padding-bottom:30px">${lista.map(tarjeta).join('')}</div>`
+      : '<div class="vacio">Aún no tienes favoritos. Toca el corazón de una prenda para guardarla aquí.<br><br><a class="btn" href="#/catalogo">Ver productos</a></div>'}
+  </div>`;
+}
+
 // Página no encontrada.
 function pantallaNoExiste() {
   app.innerHTML = `<div class="contenedor vacio"><h2>No encontramos esta página</h2><br><a class="btn" href="#/">Ir al inicio</a></div>`;
@@ -678,7 +856,8 @@ function pintarMarco() {
   // Categorías que realmente tienen productos.
   const cats = CATEGORIAS.filter((x) => estado.productos.some((p) => p.categoria === x));
   const links = [['#/catalogo', 'Toda la tienda'], ['#/catalogo?ofertas=1', 'Ofertas'], ...cats.map((x) => [`#/catalogo?cat=${encodeURIComponent(x)}`, x]), ['#/info', 'Información']];
-  $('#cab-nav').innerHTML = links.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('');
+  const principales = [['#/', 'Inicio'], ['#/catalogo', 'Tienda'], ['#/catalogo?ofertas=1', 'Ofertas'], ['#/info', 'Información']];
+  $('#cab-nav').innerHTML = principales.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('');
   $('#menu-links').innerHTML = links.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('');
   // Botón flotante de WhatsApp.
   $('#wa-flot').href = enlaceWa('Hola DUVAN STORE 👋 Quiero información.');
@@ -721,6 +900,7 @@ function enrutar() {
   else if (partes[0] === 'carrito') pantallaCarrito();
   else if (partes[0] === 'pedido') pantallaPedido(decodeURIComponent(partes[1] || ''));
   else if (partes[0] === 'info') pantallaInfo();
+  else if (partes[0] === 'favoritos') pantallaFavoritos();
   else pantallaNoExiste();
   // Marca el enlace activo del menú y sube al inicio de la página.
   $$('#cab-nav a').forEach((a) => a.toggleAttribute('aria-current', a.getAttribute('href') === location.hash));
@@ -783,6 +963,9 @@ async function iniciar() {
     return;
   }
   pintarMarco();
+  eventosTarjetas();
+  eventosProbador();
+  pintarProbador();
   window.addEventListener('hashchange', enrutar);
   enrutar();
 }
