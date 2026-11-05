@@ -10,7 +10,7 @@ Tienda online de ropa en **Cloudflare Workers** con base de datos **D1** y fotos
 | Parte | Archivos |
 |---|---|
 | API (servidor) | `src/index.js` |
-| Base de datos | `migrations/0001_inicial.sql` (tablas) y `migrations/0002_productos_ejemplo.sql` (13 productos de ejemplo) |
+| Base de datos | `migrations/0001_inicial.sql` (tablas) y `migrations/0003_productos_reales.sql` (13 productos de ejemplo con fotos reales de Unsplash; créditos en `FOTOS-CREDITOS.md`) |
 | Tienda | `public/index.html`, `public/js/tienda.js`, `public/css/tienda.css` |
 | Panel | `public/admin/index.html`, `public/js/admin.js`, `public/css/admin.css` |
 | Configuración de Cloudflare | `wrangler.jsonc` |

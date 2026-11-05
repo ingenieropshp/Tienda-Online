@@ -13,7 +13,7 @@ const estado = {
 };
 
 // Orden de categorías en menús y accesos rápidos.
-const CATEGORIAS = ['Camisas', 'Pantalones', 'Vestidos', 'Chaquetas', 'Zapatos', 'Accesorios'];
+const CATEGORIAS = ['Camisetas', 'Pantalones', 'Pantalonetas', 'Sudaderas', 'Mochos'];
 // Orden natural de tallas de ropa.
 const ORDEN_TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única'];
 
@@ -231,11 +231,8 @@ let probador = leerLista('ds_probador'); // [{ id, talla }]
 
 // Zona del cuerpo según la categoría (una prenda por zona).
 function zona(categoria) {
-  if (categoria === 'Pantalones') return 'abajo';
-  if (categoria === 'Zapatos') return 'pies';
-  if (categoria === 'Accesorios') return 'acc';
-  if (categoria === 'Vestidos') return 'vestido';
-  return 'arriba'; // Camisas, Chaquetas y otras prendas superiores
+  // Camisetas van arriba; pantalones, pantalonetas, sudaderas y mochos van abajo.
+  return categoria === 'Camisetas' ? 'arriba' : 'abajo';
 }
 // ¿El producto está en el probador?
 function enProbador(id) { return probador.some((x) => x.id === id); }
@@ -249,10 +246,9 @@ function alternarProbador(id) {
   if (enProbador(id)) {
     probador = probador.filter((x) => x.id !== id);
   } else {
-    // Un vestido ocupa arriba y abajo; las demás prendas reemplazan la de su misma zona.
+    // Cada prenda reemplaza la que ya estaba en su misma zona (una arriba y una abajo).
     const z = zona(p.categoria);
-    const choca = (otra) => { const zo = zona(otra); return zo === z || (z === 'vestido' && (zo === 'arriba' || zo === 'abajo')) || (zo === 'vestido' && (z === 'arriba' || z === 'abajo')); };
-    probador = probador.filter((x) => { const o = estado.productos.find((q) => q.id === x.id); return o && !choca(o.categoria); });
+    probador = probador.filter((x) => { const o = estado.productos.find((q) => q.id === x.id); return o && zona(o.categoria) !== z; });
     probador.push({ id, talla: primeraTalla(p) });
   }
   guardarLista('ds_probador', probador);
@@ -271,13 +267,12 @@ function pintarProbador(abrir = false) {
   const total = piezas.reduce((a, x) => a + x.p.precio, 0);
   panel.innerHTML = `
     <div class="probador-cab"><h3>Probador</h3><button class="icono-btn" data-cerrar-prob aria-label="Cerrar probador">✕</button></div>
-    <p>Toca la percha <span style="vertical-align:middle;color:var(--acento)">${IC_PERCHA}</span> de cualquier prenda para armar tu outfit. Una prenda por zona: arriba, abajo, zapatos y accesorio.</p>
+    <p>Toca la percha <span style="vertical-align:middle;color:var(--acento)">${IC_PERCHA}</span> de cualquier prenda para armar tu outfit: una camiseta arriba y una prenda abajo.</p>
     <div class="outfit">
       ${piezas.length ? piezas.map((x) => {
         const z = zona(x.p.categoria);
-        const estilo = z === 'vestido' ? 'grid-area:1/1/3/2' : '';
-        return `<img class="z-${z}" style="${estilo}" src="${esc(x.p.fotos[0] || '/img/sin-foto.svg')}" alt="${esc(x.p.nombre)}">`;
-      }).join('') : '<div class="outfit-vacio">Tu outfit está vacío.<br>Agrega una camisa, un pantalón, zapatos y un accesorio.</div>'}
+        return `<img class="z-${z}" src="${esc(x.p.fotos[0] || '/img/sin-foto.svg')}" alt="${esc(x.p.nombre)}">`;
+      }).join('') : '<div class="outfit-vacio">Tu outfit está vacío.<br>Agrega una camiseta y un pantalón, pantaloneta, sudadera o mocho.</div>'}
     </div>
     ${piezas.length ? `<div class="piezas">
       ${piezas.map((x) => `<div class="pieza">
@@ -882,7 +877,7 @@ function pintarMarco() {
 // Navegación entre pantallas
 // ---------------------------------------------------------------------
 function enrutar() {
-  // Quita el "#" y separa ruta y parámetros: "#/catalogo?cat=Camisas"
+  // Quita el "#" y separa ruta y parámetros: "#/catalogo?cat=Camisetas"
   const [ruta, query = ''] = (location.hash.slice(1) || '/').split('?');
   const params = new URLSearchParams(query);
   const partes = ruta.split('/').filter(Boolean);

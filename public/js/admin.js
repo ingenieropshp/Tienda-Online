@@ -11,7 +11,7 @@ const $$ = (sel, raiz = document) => [...raiz.querySelectorAll(sel)];
 // Estados de pedido en orden.
 const ESTADOS = ['Nuevo', 'Pago confirmado', 'Despachado', 'Entregado', 'Cancelado'];
 // Categorías sugeridas en el formulario.
-const CATEGORIAS = ['Camisas', 'Pantalones', 'Vestidos', 'Chaquetas', 'Zapatos', 'Accesorios'];
+const CATEGORIAS = ['Camisetas', 'Pantalones', 'Pantalonetas', 'Sudaderas', 'Mochos'];
 
 // Clave de administrador de esta sesión.
 let clave = '';
@@ -238,7 +238,7 @@ async function seccionFormProducto(c, id) {
   const nuevo = id === 'nuevo';
   // Datos del producto (o valores vacíos si es nuevo).
   const p = nuevo
-    ? { nombre: '', descripcion: '', categoria: 'Camisas', precio: '', precio_anterior: '', colores: [{ nombre: 'Negro', hex: '#111111' }], tallas: { S: 0, M: 0, L: 0 }, fotos: [], video: null, agotado_manual: false, destacado: false }
+    ? { nombre: '', descripcion: '', categoria: 'Camisetas', precio: '', precio_anterior: '', colores: [{ nombre: 'Negro', hex: '#111111' }], tallas: { S: 0, M: 0, L: 0 }, fotos: [], video: null, agotado_manual: false, destacado: false }
     : (await api('/api/admin/productos')).find((x) => x.id === Number(id));
   if (!p) { c.innerHTML = '<div class="caja">Producto no encontrado.</div>'; return; }
   // Copias editables.

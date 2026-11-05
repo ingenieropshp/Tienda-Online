@@ -251,10 +251,10 @@ function validarProducto(d) {
     if (talla && stock !== null) tallas[talla] = stock;
   }
   if (Object.keys(tallas).length === 0) throw new ErrorHttp(400, 'Agrega al menos una talla con su stock');
-  // Fotos: solo rutas propias (/api/media/ o /img/) para evitar enlaces externos raros.
+  // Fotos: rutas propias (/api/media/ o /img/) o fotos de ejemplo de Unsplash; nada más.
   const fotos = (Array.isArray(d.fotos) ? d.fotos : [])
     .map((f) => texto(f, 300))
-    .filter((f) => f.startsWith('/api/media/') || f.startsWith('/img/'))
+    .filter((f) => f.startsWith('/api/media/') || f.startsWith('/img/') || f.startsWith('https://images.unsplash.com/'))
     .slice(0, 10);
   // Video opcional, misma regla.
   const video = texto(d.video, 300);

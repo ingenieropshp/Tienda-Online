@@ -87,8 +87,9 @@ body { background: var(--fondo); color: var(--texto); }
 /* Accesos a categorías: carrusel horizontal en celular */
 .cats { display: grid; grid-auto-flow: column; grid-auto-columns: 42%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
 .cat { scroll-snap-align: start; border-radius: var(--radio-g); overflow: hidden; background: var(--superficie); border: 1px solid var(--linea); position: relative; aspect-ratio: 3 / 4; }
-.cat img { width: 100%; height: 100%; object-fit: contain; padding: 18px 18px 48px; }
-.cat span { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px; font-family: var(--titulos); font-weight: 700; }
+.cat img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.2s, transform 0.4s; }
+.cat:hover img { opacity: 1; transform: scale(1.04); }
+.cat span { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px; font-family: var(--titulos); font-weight: 700; background: linear-gradient(transparent, rgba(0, 0, 0, 0.75)); }
 .cat:hover { border-color: var(--acento); }
 
 /* ---------- Grilla de productos: 2 columnas en celular ---------- */
@@ -97,11 +98,12 @@ body { background: var(--fondo); color: var(--texto); }
 /* Tarjeta de producto grande */
 .tarjeta { position: relative; display: flex; flex-direction: column; background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio-g); overflow: hidden; transition: border-color 0.2s, transform 0.2s; }
 .tarjeta:hover { border-color: #3a3a40; transform: translateY(-2px); }
-.tarjeta-foto { position: relative; display: block; aspect-ratio: 1; background: radial-gradient(circle at 50% 45%, #232327, var(--superficie) 70%); }
-.tarjeta-foto img { width: 100%; height: 100%; object-fit: contain; padding: 14%; transition: transform 0.4s; }
+.tarjeta-foto { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: var(--superficie-2); }
+.tarjeta-foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }  /* Foto real a todo el ancho */
+.tarjeta-foto::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 60%, rgba(0, 0, 0, 0.35)); pointer-events: none; }  /* Sombra suave abajo */
 .tarjeta:hover .tarjeta-foto img { transform: scale(1.05); }
 .tarjeta.agotada .tarjeta-foto img { opacity: 0.35; }
-.tarjeta-foto .etq { position: absolute; top: 12px; right: 12px; }
+.tarjeta-foto .etq { position: absolute; top: 12px; right: 12px; z-index: 1; }
 
 /* Botones redondos sobre la foto: favorito y probador */
 .tar-acc { position: absolute; top: 10px; left: 10px; display: grid; gap: 8px; z-index: 2; }
@@ -110,7 +112,7 @@ body { background: var(--fondo); color: var(--texto); }
 .redondo[aria-pressed='true'] { background: var(--acento); border-color: var(--acento); color: var(--acento-texto); }
 
 /* Pie de la tarjeta: nombre, precio y botón de carrito */
-.tar-info { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; padding: 0 0 0 14px; margin-top: auto; }
+.tar-info { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; padding: 12px 0 0 14px; margin-top: auto; }
 .tar-info > a { padding: 4px 0 14px; min-width: 0; }
 .tarjeta h3 { font-size: 13px; font-weight: 500; margin: 0 0 4px; font-family: var(--textos); color: var(--texto-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tarjeta .precio { font-size: 17px; }
@@ -157,11 +159,11 @@ body { background: var(--fondo); color: var(--texto); }
 .detalle { display: grid; gap: 22px; padding: 16px 0 36px; }
 .galeria { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 22px; background: radial-gradient(circle at 50% 45%, #232327, var(--superficie) 70%); border: 1px solid var(--linea); }
 .galeria > * { scroll-snap-align: start; aspect-ratio: 1; width: 100%; object-fit: contain; }
-.galeria img { padding: 10%; }
+.galeria img { object-fit: cover; }
 .galeria video { object-fit: cover; background: #000; }
 .miniaturas { display: flex; gap: 8px; margin-top: 10px; }
 .miniaturas button { width: 64px; height: 64px; padding: 6px; border: 1px solid var(--linea); border-radius: 12px; overflow: hidden; background: var(--superficie); color: var(--texto); cursor: pointer; }
-.miniaturas img { width: 100%; height: 100%; object-fit: contain; }
+.miniaturas img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
 .info h1 { font-size: 28px; margin-bottom: 6px; }
 .info .precios { font-size: 24px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ahorro { color: var(--acento); font-size: 13px; font-weight: 600; }
@@ -182,7 +184,7 @@ details.guia td, details.guia th { border-bottom: 1px solid var(--linea); paddin
 /* ---------- Carrito y pedido ---------- */
 .carrito { display: grid; gap: 28px; padding: 24px 0 40px; }
 .linea { display: grid; grid-template-columns: 76px 1fr auto; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linea); align-items: start; }
-.linea img { width: 76px; height: 76px; object-fit: contain; padding: 6px; border-radius: 12px; background: var(--superficie-2); }
+.linea img { width: 76px; height: 76px; object-fit: cover; border-radius: 12px; background: var(--superficie-2); }
 .linea h3 { font-size: 14px; margin: 0 0 2px; font-family: var(--textos); }
 .linea small { color: var(--texto-2); display: block; }
 .linea .cantidad button { width: 34px; height: 34px; font-size: 16px; }
@@ -225,16 +227,14 @@ details.guia td, details.guia th { border-bottom: 1px solid var(--linea); paddin
 .probador-cab h3 { margin: 0; font-size: 18px; }
 .probador > p { color: var(--texto-2); font-size: 13px; margin: 4px 0 14px; }
 /* Tablero del outfit: prendas superpuestas como un maniquí plano */
-.outfit { position: relative; height: min(42vh, 360px); border-radius: 16px; background: radial-gradient(circle at 50% 40%, #2a2a2f, #151517 75%); border: 1px solid var(--linea); overflow: hidden; display: grid; grid-template-areas: 'arriba acc' 'abajo pies'; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; padding: 10px; gap: 4px; }
-.outfit img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5)); }
+.outfit { position: relative; height: min(42vh, 360px); border-radius: 16px; background: radial-gradient(circle at 50% 40%, #2a2a2f, #151517 75%); border: 1px solid var(--linea); overflow: hidden; display: grid; grid-template-areas: 'arriba' 'abajo'; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; padding: 8px; gap: 8px; }
+.outfit img { width: 100%; height: 100%; min-height: 0; object-fit: cover; border-radius: 10px; }  /* Prenda de arriba sobre la de abajo */
 .outfit .z-arriba { grid-area: arriba; }
 .outfit .z-abajo { grid-area: abajo; }
-.outfit .z-pies { grid-area: pies; align-self: end; }
-.outfit .z-acc { grid-area: acc; align-self: start; }
 .outfit-vacio { grid-column: 1 / -1; grid-row: 1 / -1; display: grid; place-items: center; text-align: center; color: var(--texto-2); font-size: 13px; padding: 20px; }
 .piezas { display: grid; gap: 8px; margin: 12px 0; }
 .pieza { display: grid; grid-template-columns: 44px 1fr auto auto; gap: 8px; align-items: center; background: var(--superficie-2); border-radius: 12px; padding: 6px 8px; font-size: 13px; }
-.pieza img { width: 44px; height: 44px; object-fit: contain; }
+.pieza img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; }
 .pieza select { height: 34px; border-radius: 8px; border: 1px solid var(--linea); background: var(--superficie); color: var(--texto); font-size: 13px; }
 .pieza button { border: 0; background: none; color: var(--texto-2); cursor: pointer; font-size: 16px; width: 28px; height: 28px; }
 .probador-total { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; }
@@ -267,7 +267,7 @@ details.guia td, details.guia th { border-bottom: 1px solid var(--linea); paddin
 @media (min-width: 768px) {
   .contenedor { padding: 0 24px; }
   .grilla { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-  .cats { grid-auto-flow: row; grid-template-columns: repeat(6, 1fr); grid-auto-columns: auto; overflow: visible; }
+  .cats { grid-auto-flow: row; grid-template-columns: repeat(5, 1fr); grid-auto-columns: auto; overflow: visible; }
   .confianza { grid-template-columns: repeat(4, 1fr); }
   .hero { min-height: 500px; align-items: center; margin: 14px 24px 0; }
   .hero-in { padding: 40px 48px; }
