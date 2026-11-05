@@ -1,8 +1,8 @@
 // Configuración del Worker "tienda-virtual" de DUVAN STORE.
 // Este archivo le dice a Cloudflare cómo publicar la tienda.
 {
-  // Nombre del Worker: la tienda quedará en https://tienda-virtual.<tu-subdominio>.workers.dev
-  "name": "tienda-virtual",
+  // Nombre del Worker (debe ser igual al de Cloudflare): https://santos-store.<tu-subdominio>.workers.dev
+  "name": "santos-store",
   // Archivo de entrada del código del servidor (la API).
   "main": "src/index.js",
   // Fecha de compatibilidad: fija el comportamiento del entorno de Cloudflare.

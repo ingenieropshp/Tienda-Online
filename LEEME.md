@@ -2,8 +2,8 @@
 
 Tienda online de ropa en **Cloudflare Workers** con base de datos **D1** y fotos en **R2**.
 
-- Tienda: `https://tienda-virtual.<tu-subdominio>.workers.dev/`
-- Panel de administración: `https://tienda-virtual.<tu-subdominio>.workers.dev/admin/`
+- Tienda: `https://santos-store.<tu-subdominio>.workers.dev/`
+- Panel de administración: `https://santos-store.<tu-subdominio>.workers.dev/admin/`
 
 ## Qué incluye
 
@@ -26,7 +26,7 @@ Cada `git push` a `main` publica la tienda automáticamente.
 1. En Cloudflare → **Storage & databases → D1** → *Create database* → nombre `tienda-virtual-db`. Copia su **Database ID** en `wrangler.jsonc` (campo `database_id`) y haz commit.
 2. En **R2** → *Create bucket* → nombre `tienda-virtual-fotos`.
 3. En **Workers & Pages** → *Create* → *Import a repository* → elige el repositorio `Tienda-Online`.
-   - Nombre del proyecto: `tienda-virtual`
+   - Nombre del proyecto: `santos-store` (igual al campo "name" de wrangler.jsonc)
    - Build command: *(vacío)*
    - Deploy command: `npm run publicar` (crea las tablas si faltan y publica)
 4. Cuando termine el primer despliegue: Worker `tienda-virtual` → **Settings → Variables and Secrets** → *Add* → tipo **Secret**, nombre `ADMIN_CLAVE`, valor = la clave del panel.
