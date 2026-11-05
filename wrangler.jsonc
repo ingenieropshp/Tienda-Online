@@ -27,8 +27,8 @@
       "binding": "DB",
       // Nombre de la base en Cloudflare.
       "database_name": "tienda-virtual-db",
-      // ID de la base: se reemplaza al crearla (wrangler d1 create tienda-virtual-db).
-      "database_id": "REEMPLAZAR_CON_ID_DE_D1",
+      // ID de la base tienda-virtual-db creada en Cloudflare.
+      "database_id": "6fa129ba-c355-491d-b976-066aeb5b6321",
       // Carpeta con las migraciones SQL.
       "migrations_dir": "migrations"
     }
