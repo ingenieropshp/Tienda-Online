@@ -1,0 +1,52 @@
+// Configuración del Worker "tienda-virtual" de DUVAN STORE.
+// Este archivo le dice a Cloudflare cómo publicar la tienda.
+{
+  // Nombre del Worker: la tienda quedará en https://tienda-virtual.<tu-subdominio>.workers.dev
+  "name": "tienda-virtual",
+  // Archivo de entrada del código del servidor (la API).
+  "main": "src/index.js",
+  // Fecha de compatibilidad: fija el comportamiento del entorno de Cloudflare.
+  "compatibility_date": "2026-10-01",
+
+  // Archivos estáticos (HTML, CSS, JS, imágenes) que se sirven directamente.
+  "assets": {
+    // Carpeta con la tienda y el panel de administración.
+    "directory": "./public",
+    // Nombre con el que el código accede a los archivos estáticos.
+    "binding": "ASSETS",
+    // Solo las rutas /api/* pasan primero por el código; lo demás es estático (más rápido y gratis).
+    "run_worker_first": ["/api/*"],
+    // Si una ruta no existe, se responde 404 en vez de una página en blanco.
+    "not_found_handling": "404-page"
+  },
+
+  // Base de datos D1 (SQLite) con productos, pedidos y configuración.
+  "d1_databases": [
+    {
+      // Nombre con el que el código usa la base: env.DB
+      "binding": "DB",
+      // Nombre de la base en Cloudflare.
+      "database_name": "tienda-virtual-db",
+      // ID de la base: se reemplaza al crearla (wrangler d1 create tienda-virtual-db).
+      "database_id": "REEMPLAZAR_CON_ID_DE_D1",
+      // Carpeta con las migraciones SQL.
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Bucket R2 donde se guardan las fotos y videos que se suben desde el panel.
+  "r2_buckets": [
+    {
+      // Nombre con el que el código usa el bucket: env.FOTOS
+      "binding": "FOTOS",
+      // Nombre del bucket en Cloudflare.
+      "bucket_name": "tienda-virtual-fotos"
+    }
+  ],
+
+  // Registros y métricas del Worker visibles en el panel de Cloudflare.
+  "observability": { "enabled": true }
+
+  // La clave del panel NO va aquí: se guarda como secreto con
+  //   npx wrangler secret put ADMIN_CLAVE
+}

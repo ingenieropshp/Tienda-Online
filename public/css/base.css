@@ -1,0 +1,123 @@
+/* =====================================================================
+   DUVAN STORE · Estilos base compartidos por la tienda y el panel
+   ===================================================================== */
+
+/* Variables de marca: colores, tipografías y medidas reutilizables */
+:root {
+  --negro: #111111;          /* Color principal de la marca */
+  --blanco: #ffffff;         /* Fondo general */
+  --gris: #f5f5f5;           /* Fondos de sección */
+  --gris-borde: #e6e6e6;     /* Bordes suaves */
+  --gris-texto: #6b6b6b;     /* Texto secundario */
+  --dorado: #c9a227;         /* Acento: descuentos y detalles */
+  --dorado-oscuro: #8a6d12;  /* Dorado legible sobre blanco */
+  --verde: #1f8f4e;          /* Confirmaciones */
+  --rojo: #c0392b;           /* Errores y agotado */
+  --radio: 6px;              /* Esquinas apenas redondeadas */
+  --sombra: 0 2px 12px rgba(0, 0, 0, 0.06); /* Sombra sutil */
+  --titulos: 'Montserrat', system-ui, sans-serif; /* Fuente de títulos */
+  --textos: 'Inter', system-ui, sans-serif;       /* Fuente de textos */
+}
+
+/* El atributo hidden siempre oculta, aunque otra regla le ponga display */
+[hidden] { display: none !important; }
+
+/* Medidas de caja predecibles en todos los elementos */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Cuerpo de la página */
+body {
+  margin: 0;                       /* Sin margen del navegador */
+  font-family: var(--textos);      /* Fuente de lectura */
+  color: var(--negro);             /* Texto oscuro */
+  background: var(--blanco);       /* Fondo blanco explícito */
+  line-height: 1.5;                /* Interlineado cómodo */
+  -webkit-font-smoothing: antialiased; /* Texto más nítido en Mac/iPhone */
+}
+
+/* Títulos con la fuente de marca */
+h1, h2, h3, h4 { font-family: var(--titulos); line-height: 1.2; margin: 0 0 0.5em; letter-spacing: -0.01em; }
+
+/* Imágenes nunca más anchas que su contenedor */
+img, video { max-width: 100%; display: block; }
+
+/* Enlaces sin subrayado por defecto */
+a { color: inherit; text-decoration: none; }
+
+/* Botones y campos heredan la fuente */
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* Botón principal: negro con texto blanco */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; /* Ícono + texto centrados */
+  min-height: 48px;                /* Grande y fácil de tocar */
+  padding: 0 22px;                 /* Espacio lateral */
+  border: 1px solid var(--negro);  /* Borde negro */
+  border-radius: var(--radio);     /* Esquinas suaves */
+  background: var(--negro);        /* Fondo negro */
+  color: var(--blanco);            /* Texto blanco */
+  font-family: var(--titulos);     /* Fuente de marca */
+  font-weight: 600;                /* Semi negrita */
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  cursor: pointer;                 /* Manito al pasar el mouse */
+  transition: opacity 0.15s, background 0.15s;
+}
+.btn:hover { opacity: 0.88; }                      /* Leve cambio al pasar el mouse */
+.btn:disabled { opacity: 0.4; cursor: not-allowed; } /* Desactivado */
+.btn-sec { background: var(--blanco); color: var(--negro); } /* Variante blanca */
+.btn-wa { background: #1fa855; border-color: #1fa855; }     /* Variante WhatsApp */
+.btn-bloque { width: 100%; }                                 /* Ocupa todo el ancho */
+.btn-peq { min-height: 36px; padding: 0 14px; font-size: 13px; }
+
+/* Campos de formulario */
+.campo { display: grid; gap: 6px; margin-bottom: 14px; }
+.campo label { font-size: 13px; font-weight: 600; }
+.campo input, .campo select, .campo textarea {
+  width: 100%;
+  min-height: 46px;                /* Alto cómodo en celular */
+  padding: 10px 12px;
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio);
+  background: var(--blanco);
+  font-size: 16px;                 /* 16px evita el zoom automático del iPhone */
+}
+.campo textarea { min-height: 80px; resize: vertical; }
+.campo input:focus, .campo select:focus, .campo textarea:focus { outline: 2px solid var(--negro); outline-offset: -1px; }
+
+/* Precio con descuento */
+.precio { font-weight: 700; font-family: var(--titulos); }
+.precio-ant { color: var(--gris-texto); text-decoration: line-through; font-weight: 400; margin-left: 6px; font-size: 0.9em; }
+
+/* Etiquetas sobre la foto del producto */
+.etq {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--titulos);
+  letter-spacing: 0.03em;
+}
+.etq-desc { background: var(--dorado); color: var(--negro); } /* "-20%" */
+.etq-agot { background: var(--negro); color: var(--blanco); } /* "Agotado" */
+
+/* Aviso flotante breve ("Agregado al carrito") */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+  background: var(--negro); color: var(--blanco);
+  padding: 12px 18px; border-radius: var(--radio);
+  font-size: 14px; opacity: 0; pointer-events: none; z-index: 100;
+  transition: opacity 0.2s, transform 0.2s;
+  max-width: calc(100% - 32px);
+}
+.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--rojo); }
+
+/* Texto solo para lectores de pantalla */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Logo wordmark: DUVAN en negrita, STORE ligero */
+.logo { font-family: var(--titulos); letter-spacing: 0.18em; line-height: 1; white-space: nowrap; }
+.logo b { font-weight: 800; }
+.logo span { font-weight: 300; margin-left: 0.35em; }
