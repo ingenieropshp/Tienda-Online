@@ -47,6 +47,4 @@
   // Registros y métricas del Worker visibles en el panel de Cloudflare.
   "observability": { "enabled": true }
 
-  // La clave del panel NO va aquí: se guarda como secreto con
-  //   npx wrangler secret put ADMIN_CLAVE
 }

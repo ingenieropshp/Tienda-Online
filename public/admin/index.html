@@ -30,18 +30,21 @@
       <p class="error-form" id="error-login" hidden></p>
       <button class="btn btn-bloque" type="submit">Entrar</button>
     </form>
-    <!-- Crear la primera cuenta (solo se muestra si todavía no existe ninguna) -->
+    <!-- Crear cuenta: solo se muestra al abrir el enlace de invitación (#crear=...) -->
     <form class="login-caja" id="form-registro" hidden>
       <div class="logo" style="font-size:24px"><b>SANTOS</b><span>STORE</span></div>
       <p>Crea la cuenta del administrador</p>
-      <div class="campo"><label for="reg-clave">Clave de instalación</label><input id="reg-clave" type="password" autocomplete="off" required>
-        <small style="color:var(--gris-texto)">Es el secreto ADMIN_CLAVE guardado en Cloudflare. Solo se usa esta vez.</small></div>
       <div class="campo"><label for="reg-correo">Correo</label><input id="reg-correo" type="email" autocomplete="username" required></div>
       <div class="campo"><label for="reg-contrasena">Contraseña (mínimo 10 caracteres)</label><input id="reg-contrasena" type="password" autocomplete="new-password" minlength="10" required></div>
       <div class="campo"><label for="reg-contrasena2">Repite la contraseña</label><input id="reg-contrasena2" type="password" autocomplete="new-password" minlength="10" required></div>
       <p class="error-form" id="error-registro" hidden></p>
       <button class="btn btn-bloque" type="submit">Crear cuenta y entrar</button>
     </form>
+    <!-- Aviso cuando aún no hay cuentas y no se abrió un enlace de invitación -->
+    <div class="login-caja" id="sin-cuenta" hidden>
+      <div class="logo" style="font-size:24px"><b>SANTOS</b><span>STORE</span></div>
+      <p>Todavía no hay cuentas en el panel. Abre el enlace de invitación que te enviaron para crear la tuya.</p>
+    </div>
   </section>
 
   <!-- Panel (se muestra después de ingresar) -->

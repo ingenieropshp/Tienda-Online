@@ -29,8 +29,14 @@ Cada `git push` a `main` publica la tienda automáticamente.
    - Nombre del proyecto: `santos-store` (igual al campo "name" de wrangler.jsonc)
    - Build command: *(vacío)*
    - Deploy command: `npm run publicar` (crea las tablas si faltan y publica)
-4. Cuando termine el primer despliegue: Worker `tienda-virtual` → **Settings → Variables and Secrets** → *Add* → tipo **Secret**, nombre `ADMIN_CLAVE`, valor = una clave de instalación (solo se usa una vez).
-5. Entra a `/admin/`: como no hay cuentas, el panel pide la clave de instalación, tu correo y una contraseña (mínimo 10 caracteres). Desde ahí se entra siempre con correo y contraseña, y la contraseña se cambia en **Configuración → Mi cuenta**.
+4. Crea un enlace de invitación (sirve una vez y vence en 24 horas): genera un token y guarda su huella en D1.
+   ```bash
+   TOKEN=$(openssl rand -hex 32)
+   HASH=$(printf %s "$TOKEN" | sha256sum | cut -d' ' -f1)
+   npx wrangler d1 execute tienda-virtual-db --remote --command "INSERT INTO invitaciones (token_hash, expira) VALUES ('$HASH', datetime('now','+24 hours'))"
+   echo "https://santos-store.<tu-subdominio>.workers.dev/admin/#crear=$TOKEN"
+   ```
+5. Abre ese enlace y escribe tu correo y una contraseña (mínimo 10 caracteres). Desde ahí se entra siempre con correo y contraseña, y la contraseña se cambia en **Configuración → Mi cuenta**. Para agregar otra persona, crea otro enlace.
 6. Abre la URL `*.workers.dev` que aparece en el Worker.
 
 ## Publicar desde tu computador (alternativa)
@@ -53,9 +59,6 @@ npx wrangler r2 bucket create tienda-virtual-fotos
 # 5. Crear las tablas y los productos de ejemplo
 npm run db:remoto
 
-# 6. Guardar la clave del panel (te la pide escrita, no queda en el código)
-npx wrangler secret put ADMIN_CLAVE
-
 # 7. Publicar
 npm run publicar
 ```
@@ -65,7 +68,6 @@ Para actualizar después de un cambio solo hay que repetir el paso 7.
 ## Probar en tu computador
 
 ```bash
-cp .dev.vars.example .dev.vars   # y cambia la clave
 npm run db:local
 npm run dev                      # abre http://localhost:8787
 ```

@@ -58,9 +58,18 @@ async function mostrarIngreso(soloEntrar = false) {
   if (!soloEntrar) {
     try { hayAdmin = (await api('/api/admin/estado', {}, { volverAlIngreso: false })).hay_admin; } catch { /* asume que ya hay cuenta */ }
   }
-  $('#form-registro').hidden = hayAdmin;
-  $('#form-login').hidden = !hayAdmin;
-  (hayAdmin ? $('#correo') : $('#reg-clave')).focus();
+  // Con enlace de invitación se muestra "Crear cuenta"; si no, "Entrar" (o un aviso si aún no hay cuentas).
+  const conInvitacion = Boolean(invitacion());
+  $('#form-registro').hidden = !conInvitacion;
+  $('#form-login').hidden = conInvitacion || !hayAdmin;
+  $('#sin-cuenta').hidden = conInvitacion || hayAdmin;
+  (conInvitacion ? $('#reg-correo') : $('#correo')).focus();
+}
+
+// Token del enlace de invitación (/admin/#crear=<token>), o cadena vacía.
+function invitacion() {
+  const m = location.hash.match(/^#crear=([0-9a-f]{64})$/);
+  return m ? m[1] : '';
 }
 
 // Abre el panel después de entrar.
@@ -105,9 +114,10 @@ $('#form-registro').addEventListener('submit', async (e) => {
   const btn = e.submitter; btn.disabled = true;
   try {
     const r = await api('/api/admin/registro', { method: 'POST', body: JSON.stringify({
-      clave_instalacion: $('#reg-clave').value, correo: $('#reg-correo').value, contrasena: $('#reg-contrasena').value,
+      invitacion: invitacion(), correo: $('#reg-correo').value, contrasena: $('#reg-contrasena').value,
     }) }, { volverAlIngreso: false });
-    ['#reg-clave', '#reg-contrasena', '#reg-contrasena2'].forEach((id) => ($(id).value = ''));
+    ['#reg-contrasena', '#reg-contrasena2'].forEach((id) => ($(id).value = ''));
+    history.replaceState(null, '', '/admin/#inicio');   // Quita el token de la barra de direcciones
     errorForm('#error-registro', '');
     aviso('Cuenta creada ✓');
     abrirPanel(r.correo);
@@ -483,5 +493,5 @@ async function seccionConfig(c) {
 // Arranque: si ya hay una sesión abierta entra directo; si no, muestra el ingreso.
 // ---------------------------------------------------------------------
 api('/api/admin/estado', {}, { volverAlIngreso: false })
-  .then((r) => (r.sesion ? abrirPanel(r.sesion.correo) : mostrarIngreso()))
+  .then((r) => (r.sesion && !invitacion() ? abrirPanel(r.sesion.correo) : mostrarIngreso()))
   .catch(() => mostrarIngreso(true));

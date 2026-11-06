@@ -163,24 +163,28 @@ export async function rutasIngreso(request, env, ruta, json) {
   if (request.headers.get('x-panel') !== '1') throw new ErrorHttp(403, 'Petición no permitida');
   const d = await request.json().catch(() => ({}));
 
-  // Crear la PRIMERA cuenta. Solo funciona si no hay ninguna y pide la clave de instalación (secreto ADMIN_CLAVE).
+  // Crear una cuenta con un enlace de invitación de un solo uso (#crear=<token> en /admin/).
   if (ruta === '/api/admin/registro') {
-    if (!env.ADMIN_CLAVE) throw new ErrorHttp(503, 'Falta configurar ADMIN_CLAVE en Cloudflare');
     await revisarLimite(env, 'registro', ip);
-    const enc = new TextEncoder();
-    const [a, b] = await Promise.all([sha256(String(d.clave_instalacion ?? '')), sha256(env.ADMIN_CLAVE)]);
-    if (!igualesBytes(enc.encode(a), enc.encode(b))) {
-      await registrarFallo(env, 'registro', ip);
-      throw new ErrorHttp(401, 'La clave de instalación no es correcta');
-    }
+    const token = String(d.invitacion ?? '');
+    const tokenHash = /^[0-9a-f]{64}$/.test(token) ? await sha256(token) : '';
     const correo = limpiarCorreo(d.correo);
     const h = await crearHuella(validarContrasena(d.contrasena));
-    // INSERT solo si la tabla está vacía (evita crear una segunda cuenta por esta vía).
-    const r = await env.DB.prepare(
-      `INSERT INTO administradores (correo, hash, sal, iteraciones)
-       SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM administradores) RETURNING id`,
-    ).bind(correo, h.hash, h.sal, h.iteraciones).first();
-    if (!r) throw new ErrorHttp(409, 'Ya existe una cuenta. Entra con tu correo y contraseña.');
+    // Marca la invitación como usada SOLO si existe, no está usada y no venció (atómico: dos intentos a la vez no pueden usarla).
+    const inv = await env.DB.prepare(
+      "UPDATE invitaciones SET usado = 1 WHERE token_hash = ? AND usado = 0 AND expira > datetime('now') RETURNING token_hash",
+    ).bind(tokenHash).first();
+    if (!inv) {
+      await registrarFallo(env, 'registro', ip);
+      throw new ErrorHttp(401, 'El enlace para crear la cuenta no es válido o ya venció');
+    }
+    const r = await env.DB.prepare('INSERT INTO administradores (correo, hash, sal, iteraciones) VALUES (?, ?, ?, ?) ON CONFLICT(correo) DO NOTHING RETURNING id')
+      .bind(correo, h.hash, h.sal, h.iteraciones).first();
+    if (!r) {
+      // El correo ya tenía cuenta: devolvemos la invitación para que pueda usarse con otro correo.
+      await env.DB.prepare('UPDATE invitaciones SET usado = 0 WHERE token_hash = ?').bind(tokenHash).run();
+      throw new ErrorHttp(409, 'Ese correo ya tiene cuenta. Entra con tu contraseña.');
+    }
     return json({ ok: true, correo }, 201, { 'set-cookie': await abrirSesion(env, r.id) });
   }
 
