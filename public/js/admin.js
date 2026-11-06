@@ -1,5 +1,5 @@
 // =====================================================================
-// DUVAN STORE · Panel de administración (navegador)
+// SANTOS STORE · Panel de administración (navegador)
 // Secciones: Inicio, Pedidos, Productos y Configuración.
 // La clave se guarda solo mientras la pestaña esté abierta (sessionStorage).
 // =====================================================================
@@ -152,7 +152,7 @@ function pintarPedidos(cont, pedidos, alCambiar) {
     // Enlace para escribirle al cliente por WhatsApp.
     let cel = p.celular.replace(/\D/g, '');
     if (cel.length === 10) cel = '57' + cel;
-    const msg = `Hola ${p.cliente_nombre.split(' ')[0]}, te escribimos de DUVAN STORE por tu pedido ${p.codigo} (${pesos(p.total)}).`;
+    const msg = `Hola ${p.cliente_nombre.split(' ')[0]}, te escribimos de SANTOS STORE por tu pedido ${p.codigo} (${pesos(p.total)}).`;
     return `
       <article class="pedido">
         <div class="pedido-cab">

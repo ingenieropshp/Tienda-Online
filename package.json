@@ -2,7 +2,7 @@
   "name": "tienda-virtual",
   "version": "1.0.0",
   "private": true,
-  "description": "DUVAN STORE: tienda online de ropa en Cloudflare Workers (D1 + R2)",
+  "description": "SANTOS STORE: tienda online de ropa en Cloudflare Workers (D1 + R2)",
   "scripts": {
     "dev": "wrangler dev",
     "db:local": "wrangler d1 migrations apply tienda-virtual-db --local",

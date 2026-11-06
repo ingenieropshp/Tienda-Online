@@ -1,4 +1,4 @@
-# DUVAN STORE · tienda-virtual
+# SANTOS STORE · tienda-virtual
 
 Tienda online de ropa en **Cloudflare Workers** con base de datos **D1** y fotos en **R2**.
 

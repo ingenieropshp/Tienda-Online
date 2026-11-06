@@ -1,5 +1,5 @@
 // =====================================================================
-// DUVAN STORE · Worker "tienda-virtual"
+// SANTOS STORE · Worker "tienda-virtual"
 // API del servidor: catálogo, pedidos, fotos y panel de administración.
 // Los archivos de /public (la tienda y el panel) los sirve Cloudflare
 // directamente; este código solo atiende las rutas que empiezan por /api/.
@@ -68,7 +68,7 @@ async function enrutar(request, env, url) {
   // Crear un pedido desde el carrito.
   if (m === 'POST' && ruta === '/api/pedidos') return crearPedido(request, env);
   // Consultar un pedido por su código (pantalla de confirmación).
-  p = ruta.match(/^\/api\/pedidos\/(DS-[A-Z0-9]{6})$/);
+  p = ruta.match(/^\/api\/pedidos\/((?:DS|SS)-[A-Z0-9]{6})$/);
   if (m === 'GET' && p) return obtenerPedidoPublico(env, p[1]);
   // Servir una foto o video guardado en R2: /api/media/<archivo>
   p = ruta.match(/^\/api\/media\/([a-zA-Z0-9-]+\.(jpg|png|webp|mp4|webm))$/);
@@ -199,11 +199,11 @@ async function exigirAdmin(request, env) {
   }
 }
 
-// Genera un código de pedido legible, ej: DS-7K2M9Q (sin letras confusas como O/0, I/1).
+// Genera un código de pedido legible, ej: SS-7K2M9Q (sin letras confusas como O/0, I/1).
 function generarCodigo() {
   const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const bytes = crypto.getRandomValues(new Uint8Array(6));
-  return 'DS-' + Array.from(bytes, (b) => letras[b % letras.length]).join('');
+  return 'SS-' + Array.from(bytes, (b) => letras[b % letras.length]).join('');
 }
 
 // ---------------------------------------------------------------------

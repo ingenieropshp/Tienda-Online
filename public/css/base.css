@@ -1,5 +1,5 @@
 /* =====================================================================
-   DUVAN STORE · Estilos base compartidos por la tienda y el panel
+   SANTOS STORE · Estilos base compartidos por la tienda y el panel
    ===================================================================== */
 
 /* Variables de marca: colores, tipografías y medidas reutilizables */
@@ -117,7 +117,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Texto solo para lectores de pantalla */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* Logo wordmark: DUVAN en negrita, STORE ligero */
+/* Logo wordmark: SANTOS en negrita, STORE ligero */
 .logo { font-family: var(--titulos); letter-spacing: 0.18em; line-height: 1; white-space: nowrap; }
 .logo b { font-weight: 800; }
 .logo span { font-weight: 300; margin-left: 0.35em; }

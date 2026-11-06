@@ -1,4 +1,4 @@
-// Configuración del Worker "tienda-virtual" de DUVAN STORE.
+// Configuración del Worker "tienda-virtual" de SANTOS STORE.
 // Este archivo le dice a Cloudflare cómo publicar la tienda.
 {
   // Nombre del Worker (debe ser igual al de Cloudflare): https://santos-store.<tu-subdominio>.workers.dev

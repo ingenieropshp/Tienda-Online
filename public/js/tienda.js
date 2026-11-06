@@ -1,5 +1,5 @@
 // =====================================================================
-// DUVAN STORE · Lógica de la tienda (navegador)
+// SANTOS STORE · Lógica de la tienda (navegador)
 // Página única: cada pantalla se dibuja dentro de <main id="app"> según
 // la parte de la dirección después del "#", por ejemplo #/producto/3.
 // =====================================================================
@@ -381,7 +381,7 @@ function pantallaInicio() {
   const cats = CATEGORIAS.map((c) => ({ c, p: estado.productos.find((p) => p.categoria === c) })).filter((x) => x.p);
   app.innerHTML = `
     <section class="hero"><div class="hero-in">
-      <small>DUVAN STORE</small>
+      <small>SANTOS STORE</small>
       <h1>Nueva Colección</h1>
       <p>Ropa, zapatos y accesorios con estilo urbano. Pide en minutos y paga al recibir.</p>
       <a class="btn" href="#/catalogo">Comprar ahora</a>
@@ -614,7 +614,7 @@ function pantallaProducto(id) {
     $$('[data-color]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.color === color));
     if ($('#color-nom')) $('#color-nom').textContent = color;
     $('#pedir-wa').href = enlaceWa(
-      `Hola DUVAN STORE 👋 Quiero pedir:\n• ${p.nombre}${color ? ` · ${color}` : ''}${talla ? ` · Talla ${talla}` : ''} · x${cantidad}\nPrecio: ${pesos(p.precio)}\n${location.origin}/#/producto/${p.id}`,
+      `Hola SANTOS STORE 👋 Quiero pedir:\n• ${p.nombre}${color ? ` · ${color}` : ''}${talla ? ` · Talla ${talla}` : ''} · x${cantidad}\nPrecio: ${pesos(p.precio)}\n${location.origin}/#/producto/${p.id}`,
     );
   };
 
@@ -763,7 +763,7 @@ function pantallaCarrito() {
 function mensajePedido(p) {
   const lineas = p.items.map((i) => `• ${i.nombre} · Talla ${i.talla}${i.color ? ` · ${i.color}` : ''} · x${i.cantidad} = ${pesos(i.precio * i.cantidad)}`).join('\n');
   const pago = p.metodo_pago === 'transferencia' ? 'Transferencia / QR (envío el comprobante)' : 'Contraentrega (efectivo)';
-  return `Hola DUVAN STORE 👋 Acabo de hacer el pedido *${p.codigo}*\n\n${lineas}\n\nSubtotal: ${pesos(p.subtotal)}\nDomicilio: ${p.domicilio ? pesos(p.domicilio) : 'Gratis'}\n*Total: ${pesos(p.total)}*\n\nPago: ${pago}\nNombre: ${p.cliente?.nombre || p.cliente_nombre || ''}${p.cliente ? `\nDirección: ${p.cliente.direccion}, ${p.cliente.barrio}` : ''}`;
+  return `Hola SANTOS STORE 👋 Acabo de hacer el pedido *${p.codigo}*\n\n${lineas}\n\nSubtotal: ${pesos(p.subtotal)}\nDomicilio: ${p.domicilio ? pesos(p.domicilio) : 'Gratis'}\n*Total: ${pesos(p.total)}*\n\nPago: ${pago}\nNombre: ${p.cliente?.nombre || p.cliente_nombre || ''}${p.cliente ? `\nDirección: ${p.cliente.direccion}, ${p.cliente.barrio}` : ''}`;
 }
 
 // 5. Confirmación del pedido
@@ -777,7 +777,7 @@ async function pantallaPedido(codigo) {
   const transf = p.metodo_pago === 'transferencia';
   app.innerHTML = `
     <div class="contenedor"><div class="confirma">
-      <span class="logo" style="font-size:22px"><b>DUVAN</b><span>STORE</span></span>
+      <span class="logo" style="font-size:22px"><b>SANTOS</b><span>STORE</span></span>
       <div class="check">✓</div>
       <h1 style="font-size:26px">¡Gracias por tu compra!</h1>
       <p>Número de pedido</p>
@@ -855,12 +855,12 @@ function pintarMarco() {
   $('#cab-nav').innerHTML = principales.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('');
   $('#menu-links').innerHTML = links.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('');
   // Botón flotante de WhatsApp.
-  $('#wa-flot').href = enlaceWa('Hola DUVAN STORE 👋 Quiero información.');
+  $('#wa-flot').href = enlaceWa('Hola SANTOS STORE 👋 Quiero información.');
   // Pie de página.
   $('#pie').innerHTML = `
     <div class="contenedor">
       <div class="pie-grid">
-        <div><span class="logo"><b>DUVAN</b><span>STORE</span></span><p>Moda urbana con envíos a domicilio y pago al recibir.</p></div>
+        <div><span class="logo"><b>SANTOS</b><span>STORE</span></span><p>Moda urbana con envíos a domicilio y pago al recibir.</p></div>
         <div><h4>Tienda</h4><p>${esc(c.direccion)}</p><p>${esc(c.horario)}</p></div>
         <div><h4>Pagos</h4><p>Contraentrega · Nequi · Daviplata · Transferencia</p></div>
         <div><h4>Síguenos</h4>
@@ -869,7 +869,7 @@ function pintarMarco() {
           <a href="${esc(c.tiktok)}" target="_blank" rel="noopener">TikTok</a>
           <a href="#/info">Información y preguntas</a></div>
       </div>
-      <div class="legal">© ${new Date().getFullYear()} DUVAN STORE · Todos los derechos reservados</div>
+      <div class="legal">© ${new Date().getFullYear()} SANTOS STORE · Todos los derechos reservados</div>
     </div>`;
 }
 

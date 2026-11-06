@@ -1,5 +1,5 @@
 /* =====================================================================
-   DUVAN STORE · Estilos de la tienda (tema oscuro, mobile-first)
+   SANTOS STORE · Estilos de la tienda (tema oscuro, mobile-first)
    Primero se diseña para celular y luego se ajusta con @media.
    ===================================================================== */
 
@@ -70,7 +70,7 @@ body { background: var(--fondo); color: var(--texto); }
 /* ---------- Banner principal ---------- */
 .hero { margin: 12px 10px 0; border-radius: 22px; position: relative; min-height: 420px; display: flex; align-items: flex-end; overflow: hidden; border: 1px solid var(--linea);
   background: radial-gradient(120% 90% at 85% 10%, color-mix(in srgb, var(--acento) 35%, transparent) 0%, transparent 55%), linear-gradient(160deg, #1b1b1e, #0e0e10); }
-.hero::after { content: 'DS'; position: absolute; right: -16px; top: 0; font-family: var(--titulos); font-weight: 800; font-size: 240px; line-height: 1; color: color-mix(in srgb, var(--acento) 14%, transparent); letter-spacing: -0.04em; }
+.hero::after { content: 'SS'; position: absolute; right: -16px; top: 0; font-family: var(--titulos); font-weight: 800; font-size: 240px; line-height: 1; color: color-mix(in srgb, var(--acento) 14%, transparent); letter-spacing: -0.04em; }
 .hero-in { position: relative; z-index: 1; padding: 36px 20px; max-width: 1320px; margin: 0 auto; width: 100%; }
 .hero small { color: var(--acento); letter-spacing: 0.25em; font-weight: 600; font-size: 12px; }
 .hero h1 { font-size: 40px; font-weight: 800; margin: 10px 0 14px; letter-spacing: -0.02em; }
