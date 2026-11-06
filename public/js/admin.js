@@ -1,7 +1,7 @@
 // =====================================================================
 // SANTOS STORE · Panel de administración (navegador)
 // Secciones: Inicio, Pedidos, Productos y Configuración.
-// La clave se guarda solo mientras la pestaña esté abierta (sessionStorage).
+// Se entra con correo y contraseña; la sesión dura 7 días en una cookie segura.
 // =====================================================================
 
 // Atajos para buscar elementos.
@@ -13,9 +13,8 @@ const ESTADOS = ['Nuevo', 'Pago confirmado', 'Despachado', 'Entregado', 'Cancela
 // Categorías sugeridas en el formulario.
 const CATEGORIAS = ['Camisetas', 'Pantalones', 'Pantalonetas', 'Sudaderas', 'Mochos'];
 
-// Clave de administrador de esta sesión.
-let clave = '';
-try { clave = sessionStorage.getItem('ds_clave') || ''; } catch { /* navegador sin almacenamiento */ }
+// Correo de la cuenta con sesión abierta (la sesión vive en una cookie segura que el JavaScript no puede leer).
+let correoSesion = '';
 
 // Formato de pesos: 89900 → "$89.900"
 const pesos = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
@@ -37,12 +36,13 @@ function aviso(msg, error = false) {
   tAviso = setTimeout(() => t.classList.remove('visible'), 2600);
 }
 
-// Llamada a la API con la clave. Si la clave es incorrecta, vuelve al ingreso.
-async function api(ruta, opciones = {}) {
-  const headers = { authorization: `Bearer ${clave}`, ...(opciones.body && !(opciones.body instanceof Blob) ? { 'content-type': 'application/json' } : {}), ...opciones.headers };
-  const r = await fetch(ruta, { ...opciones, headers });
+// Llamada a la API del panel. La cookie de sesión viaja sola; "x-panel" confirma que la petición sale de este panel.
+async function api(ruta, opciones = {}, { volverAlIngreso = true } = {}) {
+  const headers = { 'x-panel': '1', ...(opciones.body && !(opciones.body instanceof Blob) ? { 'content-type': 'application/json' } : {}), ...opciones.headers };
+  const r = await fetch(ruta, { ...opciones, headers, credentials: 'same-origin' });
   const datos = await r.json().catch(() => ({}));
-  if (r.status === 401) { salir(); throw new Error('Clave incorrecta'); }
+  // Sesión vencida: vuelve a la pantalla de ingreso.
+  if (r.status === 401 && volverAlIngreso) { mostrarIngreso(true); throw new Error(datos.error || 'Tu sesión terminó'); }
   if (!r.ok) throw new Error(datos.error || 'Error de conexión');
   return datos;
 }
@@ -50,33 +50,70 @@ async function api(ruta, opciones = {}) {
 // ---------------------------------------------------------------------
 // Ingreso y salida
 // ---------------------------------------------------------------------
-function mostrarLogin() {
+// Muestra el formulario que corresponda: crear la primera cuenta o entrar.
+async function mostrarIngreso(soloEntrar = false) {
   $('#panel').hidden = true;
   $('#login').hidden = false;
-  $('#clave').focus();
+  let hayAdmin = true;
+  if (!soloEntrar) {
+    try { hayAdmin = (await api('/api/admin/estado', {}, { volverAlIngreso: false })).hay_admin; } catch { /* asume que ya hay cuenta */ }
+  }
+  $('#form-registro').hidden = hayAdmin;
+  $('#form-login').hidden = !hayAdmin;
+  (hayAdmin ? $('#correo') : $('#reg-clave')).focus();
 }
 
-function salir() {
-  clave = '';
-  try { sessionStorage.removeItem('ds_clave'); } catch { /* nada */ }
-  mostrarLogin();
+// Abre el panel después de entrar.
+function abrirPanel(correo) {
+  correoSesion = correo;
+  $('#login').hidden = true;
+  $('#panel').hidden = false;
+  navegar();
 }
 
+// Cierra la sesión en el servidor y vuelve al ingreso.
+async function salir() {
+  try { await api('/api/admin/salir', { method: 'POST' }, { volverAlIngreso: false }); } catch { /* igual se muestra el ingreso */ }
+  correoSesion = '';
+  mostrarIngreso(true);
+}
+
+// Muestra un error dentro del formulario.
+function errorForm(id, msg) {
+  const e = $(id);
+  e.textContent = msg; e.hidden = !msg;
+}
+
+// Entrar con correo y contraseña.
 $('#form-login').addEventListener('submit', async (e) => {
   e.preventDefault();
-  clave = $('#clave').value;
-  const err = $('#error-login');
+  const btn = e.submitter; btn.disabled = true;
   try {
-    await api('/api/admin/sesion');                   // Verifica la clave
-    try { sessionStorage.setItem('ds_clave', clave); } catch { /* nada */ }
-    err.hidden = true;
-    $('#login').hidden = true;
-    $('#panel').hidden = false;
-    navegar();
+    const r = await api('/api/admin/entrar', { method: 'POST', body: JSON.stringify({ correo: $('#correo').value, contrasena: $('#contrasena').value }) }, { volverAlIngreso: false });
+    $('#contrasena').value = '';
+    errorForm('#error-login', '');
+    abrirPanel(r.correo);
   } catch (ex) {
-    err.textContent = ex.message; err.hidden = false;
-    $('#login').hidden = false; $('#panel').hidden = true;
-  }
+    errorForm('#error-login', ex.message);
+  } finally { btn.disabled = false; }
+});
+
+// Crear la primera cuenta (solo aparece cuando no hay ninguna).
+$('#form-registro').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if ($('#reg-contrasena').value !== $('#reg-contrasena2').value) return errorForm('#error-registro', 'Las contraseñas no coinciden');
+  const btn = e.submitter; btn.disabled = true;
+  try {
+    const r = await api('/api/admin/registro', { method: 'POST', body: JSON.stringify({
+      clave_instalacion: $('#reg-clave').value, correo: $('#reg-correo').value, contrasena: $('#reg-contrasena').value,
+    }) }, { volverAlIngreso: false });
+    ['#reg-clave', '#reg-contrasena', '#reg-contrasena2'].forEach((id) => ($(id).value = ''));
+    errorForm('#error-registro', '');
+    aviso('Cuenta creada ✓');
+    abrirPanel(r.correo);
+  } catch (ex) {
+    errorForm('#error-registro', ex.message);
+  } finally { btn.disabled = false; }
 });
 
 $('#salir').addEventListener('click', salir);
@@ -104,7 +141,7 @@ async function navegar() {
     c.innerHTML = `<div class="caja">No se pudo cargar: ${esc(ex.message)}</div>`;
   }
 }
-window.addEventListener('hashchange', () => { if (clave) navegar(); });
+window.addEventListener('hashchange', () => { if (correoSesion) navegar(); });
 
 // ---------------------------------------------------------------------
 // Inicio: tarjetas de resumen y últimos pedidos
@@ -413,7 +450,25 @@ async function seccionConfig(c) {
         <label for="c-${k}">${l}</label><input id="c-${k}" name="${k}" value="${esc(cfg[k])}" ${k.startsWith('domicilio') ? 'inputmode="numeric"' : ''}>
         ${h ? `<small style="color:var(--gris-texto)">${h}</small>` : ''}</div>`).join('')}
       <div class="ancho"><button class="btn" type="submit">Guardar cambios</button></div>
+    </form>
+    <h2 style="font-size:18px">Mi cuenta</h2>
+    <form id="form-clave" class="caja form-grid" autocomplete="on">
+      <div class="campo ancho"><label>Correo</label><input value="${esc(correoSesion)}" disabled autocomplete="username"></div>
+      <div class="campo"><label for="cl-actual">Contraseña actual</label><input id="cl-actual" type="password" autocomplete="current-password" required></div>
+      <div class="campo"><label for="cl-nueva">Contraseña nueva (mínimo 10 caracteres)</label><input id="cl-nueva" type="password" autocomplete="new-password" minlength="10" required></div>
+      <p class="error-form ancho" id="error-clave" hidden></p>
+      <div class="ancho"><button class="btn" type="submit">Cambiar contraseña</button></div>
     </form>`;
+  // Cambiar contraseña (cierra las otras sesiones abiertas).
+  $('#form-clave', c).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('/api/admin/contrasena', { method: 'PUT', body: JSON.stringify({ actual: $('#cl-actual', c).value, nueva: $('#cl-nueva', c).value }) }, { volverAlIngreso: false });
+      $('#cl-actual', c).value = ''; $('#cl-nueva', c).value = '';
+      errorForm('#error-clave', '');
+      aviso('Contraseña cambiada ✓');
+    } catch (ex) { errorForm('#error-clave', ex.message); }
+  });
   $('#form-cfg', c).addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -425,12 +480,8 @@ async function seccionConfig(c) {
 }
 
 // ---------------------------------------------------------------------
-// Arranque: si ya hay clave en esta pestaña, entra directo.
+// Arranque: si ya hay una sesión abierta entra directo; si no, muestra el ingreso.
 // ---------------------------------------------------------------------
-if (clave) {
-  api('/api/admin/sesion')
-    .then(() => { $('#panel').hidden = false; navegar(); })
-    .catch(mostrarLogin);
-} else {
-  mostrarLogin();
-}
+api('/api/admin/estado', {}, { volverAlIngreso: false })
+  .then((r) => (r.sesion ? abrirPanel(r.sesion.correo) : mostrarIngreso()))
+  .catch(() => mostrarIngreso(true));

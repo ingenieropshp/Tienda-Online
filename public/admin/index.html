@@ -19,14 +19,28 @@
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-  <!-- Pantalla de ingreso con la clave -->
+  <!-- Pantalla de ingreso: entrar o crear la primera cuenta -->
   <section class="login" id="login" hidden>
-    <form class="login-caja" id="form-login">
+    <!-- Entrar con correo y contraseña -->
+    <form class="login-caja" id="form-login" hidden>
       <div class="logo" style="font-size:24px"><b>SANTOS</b><span>STORE</span></div>
       <p>Panel de administración</p>
-      <div class="campo"><label for="clave">Clave</label><input id="clave" type="password" autocomplete="current-password" required></div>
+      <div class="campo"><label for="correo">Correo</label><input id="correo" type="email" autocomplete="username" required></div>
+      <div class="campo"><label for="contrasena">Contraseña</label><input id="contrasena" type="password" autocomplete="current-password" required></div>
       <p class="error-form" id="error-login" hidden></p>
       <button class="btn btn-bloque" type="submit">Entrar</button>
+    </form>
+    <!-- Crear la primera cuenta (solo se muestra si todavía no existe ninguna) -->
+    <form class="login-caja" id="form-registro" hidden>
+      <div class="logo" style="font-size:24px"><b>SANTOS</b><span>STORE</span></div>
+      <p>Crea la cuenta del administrador</p>
+      <div class="campo"><label for="reg-clave">Clave de instalación</label><input id="reg-clave" type="password" autocomplete="off" required>
+        <small style="color:var(--gris-texto)">Es el secreto ADMIN_CLAVE guardado en Cloudflare. Solo se usa esta vez.</small></div>
+      <div class="campo"><label for="reg-correo">Correo</label><input id="reg-correo" type="email" autocomplete="username" required></div>
+      <div class="campo"><label for="reg-contrasena">Contraseña (mínimo 10 caracteres)</label><input id="reg-contrasena" type="password" autocomplete="new-password" minlength="10" required></div>
+      <div class="campo"><label for="reg-contrasena2">Repite la contraseña</label><input id="reg-contrasena2" type="password" autocomplete="new-password" minlength="10" required></div>
+      <p class="error-form" id="error-registro" hidden></p>
+      <button class="btn btn-bloque" type="submit">Crear cuenta y entrar</button>
     </form>
   </section>
 

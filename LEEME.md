@@ -29,8 +29,9 @@ Cada `git push` a `main` publica la tienda automáticamente.
    - Nombre del proyecto: `santos-store` (igual al campo "name" de wrangler.jsonc)
    - Build command: *(vacío)*
    - Deploy command: `npm run publicar` (crea las tablas si faltan y publica)
-4. Cuando termine el primer despliegue: Worker `tienda-virtual` → **Settings → Variables and Secrets** → *Add* → tipo **Secret**, nombre `ADMIN_CLAVE`, valor = la clave del panel.
-5. Abre la URL `*.workers.dev` que aparece en el Worker.
+4. Cuando termine el primer despliegue: Worker `tienda-virtual` → **Settings → Variables and Secrets** → *Add* → tipo **Secret**, nombre `ADMIN_CLAVE`, valor = una clave de instalación (solo se usa una vez).
+5. Entra a `/admin/`: como no hay cuentas, el panel pide la clave de instalación, tu correo y una contraseña (mínimo 10 caracteres). Desde ahí se entra siempre con correo y contraseña, y la contraseña se cambia en **Configuración → Mi cuenta**.
+6. Abre la URL `*.workers.dev` que aparece en el Worker.
 
 ## Publicar desde tu computador (alternativa)
 

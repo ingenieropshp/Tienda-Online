@@ -5,6 +5,9 @@
 // directamente; este código solo atiende las rutas que empiezan por /api/.
 // =====================================================================
 
+// Ingreso al panel con correo y contraseña (ver src/auth.js).
+import { exigirAdmin, rutasIngreso, cambiarContrasena, configurarErrores } from './auth.js';
+
 // Estados válidos de un pedido, en el orden en que avanza.
 const ESTADOS = ['Nuevo', 'Pago confirmado', 'Despachado', 'Entregado', 'Cancelado'];
 
@@ -74,12 +77,17 @@ async function enrutar(request, env, url) {
   p = ruta.match(/^\/api\/media\/([a-zA-Z0-9-]+\.(jpg|png|webp|mp4|webm))$/);
   if (m === 'GET' && p) return servirMedia(request, env, p[1]);
 
-  // ---------- Rutas del panel (requieren la clave) ----------
+  // ---------- Rutas del panel ----------
   if (ruta.startsWith('/api/admin/')) {
-    // Verifica la clave antes de hacer cualquier cosa.
-    await exigirAdmin(request, env);
-    // Comprobar que la clave es correcta (lo usa la pantalla de ingreso).
-    if (m === 'GET' && ruta === '/api/admin/sesion') return json({ ok: true });
+    // Crear primera cuenta, entrar, salir y estado (no requieren sesión).
+    const ingreso = await rutasIngreso(request, env, ruta, json);
+    if (ingreso) return ingreso;
+    // Todo lo demás exige una sesión abierta.
+    const admin = await exigirAdmin(request, env);
+    // Datos de la sesión actual.
+    if (m === 'GET' && ruta === '/api/admin/sesion') return json({ ok: true, correo: admin.correo });
+    // Cambiar la contraseña propia.
+    if (m === 'PUT' && ruta === '/api/admin/contrasena') return cambiarContrasena(request, env, admin, json);
     // Resumen para el inicio del panel.
     if (m === 'GET' && ruta === '/api/admin/resumen') return resumenAdmin(env);
     // Todos los productos, incluso agotados.
@@ -117,6 +125,8 @@ class ErrorHttp extends Error {
     this.status = status; // Guarda el código HTTP.
   }
 }
+// El módulo de ingreso usa esta misma clase de error.
+configurarErrores(ErrorHttp);
 
 // Crea una respuesta JSON con el código indicado.
 function json(datos, status = 200, extra = {}) {
@@ -173,30 +183,6 @@ function filaAProducto(f) {
 async function leerConfig(env) {
   const { results } = await env.DB.prepare('SELECT clave, valor FROM configuracion').all();
   return Object.fromEntries(results.map((r) => [r.clave, r.valor]));
-}
-
-// Compara dos textos en tiempo constante (evita adivinar la clave midiendo tiempos).
-async function igualesSeguro(a, b) {
-  const enc = new TextEncoder();
-  // Resumimos ambos con SHA-256 para que tengan el mismo largo.
-  const [ha, hb] = await Promise.all([
-    crypto.subtle.digest('SHA-256', enc.encode(a)),
-    crypto.subtle.digest('SHA-256', enc.encode(b)),
-  ]);
-  // timingSafeEqual compara byte a byte sin salir antes de tiempo.
-  return crypto.subtle.timingSafeEqual(ha, hb);
-}
-
-// Verifica el encabezado "Authorization: Bearer <clave>" contra el secreto ADMIN_CLAVE.
-async function exigirAdmin(request, env) {
-  // Si el secreto no está configurado, el panel queda bloqueado.
-  if (!env.ADMIN_CLAVE) throw new ErrorHttp(503, 'Falta configurar ADMIN_CLAVE en Cloudflare');
-  // Extrae la clave enviada por el panel.
-  const enviada = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  // Compara de forma segura.
-  if (!enviada || !(await igualesSeguro(enviada, env.ADMIN_CLAVE))) {
-    throw new ErrorHttp(401, 'Clave incorrecta');
-  }
 }
 
 // Genera un código de pedido legible, ej: SS-7K2M9Q (sin letras confusas como O/0, I/1).
